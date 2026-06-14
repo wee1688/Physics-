@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gravitation Mastery Workspace | Cognitive Dashboard</title>
+    <!-- Tailwind CSS v4 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Supabase Client CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- QRCode CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- MQTT Over WebSockets -->
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+    <style>
+        body {
+            background: radial-gradient(circle at top, #0f172a 0%, #020617 100%);
+            color: #f1f5f9;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        /* Custom scrollbar styling for technical list views */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #020617;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 md:p-6 select-none bg-slate-950 selection:bg-indigo-500/30 selection:text-indigo-200">
+
+    <!-- TOP HEADER STATUS BAR -->
+    <header class="w-full max-w-6xl mx-auto mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 shadow-xl backdrop-blur-md">
+        <div class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <span class="text-white font-mono font-bold text-lg">G</span>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                    Gravitation Mastery
+                    <span class="text-[10px] font-mono bg-blue-950 border border-blue-900 text-blue-400 px-2 py-0.5 rounded tracking-normal">COGNITIVE ENGINE v1.2</span>
+                </h1>
+                <p class="text-xs text-slate-400">Desktop Paper Calculation Handhsake & SRS Ledger Portal</p>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3 justify-center">
+            <!-- Pairing ID badge -->
+            <div class="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-300">
+                <span class="text-slate-400 font-mono text-[10px] uppercase">Session:</span>
+                <span id="sessionBadge" class="font-mono font-bold text-indigo-400">#00000</span>
+            </div>
+
+            <!-- MQTT Handshake status -->
+            <div class="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs">
+                <span id="mqttStatusDot" class="h-2 w-2 rounded-full bg-red-500 animate-pulse"></span>
+                <span id="mqttStatusText" class="text-slate-400 font-mono text-[10.5px]">Broker Offline</span>
+            </div>
+
+            <!-- Database connection status -->
+            <div class="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs">
+                <span id="dbStatusDot" class="h-2 w-2 rounded-full bg-amber-500"></span>
+                <span id="dbStatusText" class="text-slate-400 font-mono text-[10.5px]">Supabase Offline</span>
+            </div>
+
+            <!-- Paper 3 Sandbox Link -->
+            <button onclick="window.location.href='paper3.html'" class="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-600 border border-amber-500/20 hover:border-amber-500 text-amber-400 hover:text-white font-bold rounded-lg text-xs transition-all cursor-pointer">
+                Paper 3 Sandbox
+            </button>
+
+            <!-- Quick Calibration reset to return to onboarding -->
+            <button onclick="window.location.href='onboarding.html'" class="px-3 py-1.5 bg-slate-850 hover:bg-slate-800 text-slate-300 font-bold border border-slate-750 hover:border-slate-650 rounded-lg text-xs transition-all cursor-pointer">
+                Reset Calibration
+            </button>
+        </div>
+    </header>
+
+    <!-- CORE WORKSPACE PANEL GRID -->
+    <main class="w-full max-w-6xl mx-auto flex-1 grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch mb-6">
+        
+        <!-- LEFT PANEL: CURRICULUM CLIMBER (Math Assistance & Dynamic Phrasing) -->
+        <section class="md:col-span-6 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl flex flex-col justify-between" id="curriculumPanel">
+            
+            <div class="space-y-5">
+                <!-- Syllabus header -->
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-mono font-bold uppercase tracking-wider text-blue-400 flex items-center gap-1.5">
+                        <span class="inline-block w-1.5 h-1.5 rounded-full bg-blue-500"></span> Active Syllabus Tracker
+                    </span>
+                    <span id="trackBadge" class="text-[10px] uppercase font-mono bg-indigo-950/80 border border-indigo-900 text-indigo-300 px-2.5 py-0.5 rounded-full font-bold">HL FIELD FOCUS</span>
+                </div>
+
+                <!-- Subtopic selector dropdown -->
+                <div class="space-y-1.5">
+                    <label for="subtopicSelect" class="text-xs font-bold text-slate-400 block">Active Gravitation Subtopic Module</label>
+                    <select id="subtopicSelect" onchange="loadActiveQuestion()" class="w-full bg-slate-950 border border-slate-850 hover:border-slate-700 text-sm text-slate-200 p-3 rounded-xl focus:ring-2 focus:ring-blue-500/40 transition-all outline-none">
+                        <option value="TOPIC_10_2">Topic 10.2: Orbital Mechanics & Kepler's 3rd Law (HL Derivations)</option>
+                        <option value="TOPIC_10_1">Topic 10.1: Gravitational Potential Boundaries & Escape Speeds</option>
+                        <option value="TOPIC_6_2">Topic 6.2: Newton's Law of Gravitation & Radial Acceleration Field</option>
+                        <option value="TOPIC_6_1">Topic 6.1: Circular Centripetal Force & Frictionless Banked Curves</option>
+                    </select>
+                </div>
+
+                <!-- Active question card body -->
+                <div class="bg-slate-950/80 border border-slate-850 rounded-xl p-5 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span id="tierLabel" class="text-[10px] font-mono uppercase bg-red-950 border border-red-900 text-red-400 px-2 py-0.5 rounded font-bold">Tier 3 Exam Derivation</span>
+                        <span class="text-[10.5px] font-mono text-slate-500">Marks value: [3 Marks]</span>
+                    </div>
+
+                    <h2 id="questionTitle" class="text-base font-bold text-slate-100 tracking-tight">Derive satellite orbital speed and prove Kepler's Third Law (T² ∝ r³)</h2>
+                    
+                    <div id="questionText" class="text-sm text-slate-350 leading-relaxed font-sans bg-slate-900/40 p-4 border-l-2 border-indigo-500 rounded-r-md">
+                        Loading problem metrics...
+                    </div>
+                </div>
+            </div>
+
+            <!-- EXPANDABLE ACCORDION: MATHEMATICAL EXPONENT ASSISTANCE HINTS -->
+            <div class="mt-6 border border-slate-800 rounded-xl overflow-hidden bg-slate-950/40">
+                <button onclick="toggleHintsAccordion()" class="w-full p-4 bg-slate-950/60 hover:bg-slate-950 text-left flex items-center justify-between transition-all focus:outline-none cursor-pointer">
+                    <span class="text-xs font-mono font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
+                        <span class="inline-block w-2 h-2 rounded bg-amber-500"></span> EXPONENT MATH ASSISTANCE HINTS
+                    </span>
+                    <span id="accordionArrow" class="text-slate-400 font-mono text-sm transform transition-transform duration-300">▼</span>
+                </button>
+                <div id="hintsDrawer" class="hidden border-t border-slate-850 p-4 bg-slate-950/80 text-xs leading-relaxed text-slate-300 space-y-3">
+                    <div>
+                        <h4 class="font-bold text-amber-500 font-mono uppercase tracking-wide text-[10px]">Scaffolding Strategic Tip:</h4>
+                        <p id="hintTip" class="text-slate-300 mt-1 font-sans">Think about normal forces...</p>
+                    </div>
+                    <div id="hintMathContainer" class="border-t border-slate-850 pt-2.5">
+                        <h4 class="font-bold text-indigo-400 font-mono uppercase tracking-wide text-[10px]">Exponent Calculations Breakdown:</h4>
+                        <pre id="hintMath" class="bg-slate-900/60 text-slate-200 p-2.5 rounded mt-1.5 font-mono overflow-x-auto text-[11px] border border-slate-800 leading-snug">W = F * d ...</pre>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- RIGHT PANEL: PHOTO SYNC & EVALUATION COGNITIVE ESCALATOR (Blur active handshake trigger) -->
+        <section class="md:col-span-6 flex flex-col justify-between" id="rightPanelContainer">
+            
+            <!-- STANDBY/BLURRED WRAPPER CARD -->
+            <div id="rightPanelCard" class="bg-slate-900 border border-slate-801 rounded-2xl h-full p-6 shadow-2xl flex flex-col justify-between relative overflow-hidden">
+                
+                <!-- STANDBY OVERLAY (Active before device handshake submission event) -->
+                <div id="standbyOverlay" class="absolute inset-0 bg-slate-950/90 backdrop-blur-md z-30 flex flex-col items-center justify-center p-6 text-center space-y-6">
+                    <div class="relative w-16 h-16 flex items-center justify-center">
+                        <span class="absolute inset-0 rounded-full border-4 border-indigo-500/20 animate-ping"></span>
+                        <div class="h-12 w-12 rounded-xl bg-indigo-950/85 border border-indigo-500/50 flex items-center justify-center text-indigo-400">
+                            <span class="animate-pulse">📡</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 max-w-sm">
+                        <h3 class="text-lg font-bold text-white tracking-tight">Wireless Calculator Sync Lens</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed font-sans">
+                            Right panel locked. Practice freehand paper calculations first. Pair your smartphone camera below to instantly sync physical homework sheets.
+                        </p>
+                    </div>
+
+                    <!-- Live Dynamic QR Code generation box links back to mobile.html -->
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col items-center space-y-2.5 shadow-lg max-w-[240px] w-full">
+                        <div class="bg-white p-2 rounded-lg flex items-center justify-center relative overflow-hidden">
+                            <div id="desktopQrContainer" class="w-32 h-32 bg-slate-950 rounded flex items-center justify-center"></div>
+                            <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 animate-bounce"></div>
+                        </div>
+                        <div class="text-[9.5px] font-mono text-slate-500 text-center leading-tight">
+                            Scan QR with mobile device to open sync camera viewport.
+                        </div>
+                    </div>
+
+                    <!-- Sandbox Simulator bypass link for dry testing environments -->
+                    <div class="pt-2">
+                        <button onclick="simulatePhotoPayloadDirect()" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs uppercase tracking-wider rounded-xl cursor-pointer transition-all shadow-lg hover:shadow-indigo-500/10 border-0 flex items-center gap-1.5">
+                            ⚡ Simulate Hand-Written Paper Upload
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ACTIVE SCREEN (Reveals on submission image payload event) -->
+                <div class="relative z-10 flex-1 flex flex-col justify-between h-full space-y-5">
+                    
+                    <!-- Paper submission preview inside polaroid grid mockup frame -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                                <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> CAMERA snapshot synced
+                            </span>
+                            <button onclick="lockPanelBackToStandby()" class="text-[10px] font-mono text-slate-500 hover:text-slate-300 underline bg-transparent border-0 cursor-pointer">
+                                Clear Snapshot [Lock]
+                            </button>
+                        </div>
+
+                        <!-- Polaroid Image Box container -->
+                        <div class="bg-white border-4 border-slate-100 shadow-inner rounded-xl p-3 relative overflow-hidden aspect-[4/3] flex items-center justify-center group bg-radial from-slate-50 to-slate-200">
+                            <!-- Background handwriting overlay vector lines -->
+                            <div class="absolute inset-0 bg-grid-slate-200 [mask-image:linear-gradient(0deg,white,transparent)] pointer-events-none opacity-40"></div>
+                            
+                            <img id="syncedProofImage" src="" alt="Synced paper calculations" class="max-h-full max-w-full object-contain rounded border border-slate-200/50 relative z-10 select-none shadow-sm referrerPolicy='no-referrer'" />
+                            
+                            <!-- Ink Lens visual calibration markers -->
+                            <div class="absolute top-2 left-2 text-[10px] font-mono text-indigo-700 bg-white/80 px-2 py-0.5 rounded border border-indigo-100 relative z-20 shadow-xs uppercase font-bold">InkLens v2.0 calibrator</div>
+                            <div class="absolute bottom-2 right-2 text-[9px] font-mono text-slate-500 relative z-20">CALIBRATION INDEX: SECURE PASS</div>
+                        </div>
+                    </div>
+
+                    <!-- Step criteria checklist rows -->
+                    <div class="space-y-3.5 pt-2.5">
+                        <h4 class="text-xs font-bold text-indigo-400 font-mono uppercase tracking-wider">REPORTS MARKING RIGOROUS SCHEME CRITERIA:</h4>
+                        
+                        <div class="space-y-2" id="criteriaChecklist">
+                            <!-- Injected dynamically based on subtopic criteria -->
+                        </div>
+                    </div>
+
+                    <!-- Dynamic estimated band status banner -->
+                    <div class="pt-4 border-t border-slate-800">
+                        <div id="estimatedBandAlert" class="bg-slate-950/60 border border-slate-850 p-4 rounded-xl flex items-center justify-between text-slate-300">
+                            <div>
+                                <h5 class="text-[10px] font-mono text-slate-400 uppercase tracking-wide">Cognitive Calibration Assessment Metric</h5>
+                                <p id="estimatedBandText" class="text-sm font-black text-slate-450 mt-0.5 tracking-tight font-sans">ESTIMATED LEVEL: BAND 2</p>
+                            </div>
+                            <!-- Small band score visual badge -->
+                            <span id="bandNumBadge" class="h-10 w-10 text-xl font-bold font-mono rounded-lg bg-slate-900 border border-slate-800 text-slate-500 flex items-center justify-center shadow-inner">2</span>
+                        </div>
+                    </div>
+
+                    <!-- Final command submit button -->
+                    <button id="submitLedgerBtn" disabled onclick="executeSpacedRepetitionTransaction()" class="w-full py-4 bg-slate-800 text-slate-500 border border-slate-750 font-bold rounded-xl text-xs uppercase tracking-wider transition-all cursor-not-allowed duration-300 ease-out outline-none">
+                        Self-Grading Assessment Required
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- HISTORIC MEMORY LEDGER RECORDS TABLE -->
+    <section class="w-full max-w-6xl mx-auto bg-slate-900 border border-slate-801 rounded-2xl p-6 shadow-2xl relative overflow-hidden mb-6">
+        <div class="flex flex-col sm:flex-row items-center justify-between border-b border-slate-800 pb-4 mb-4 gap-4">
+            <div>
+                <h3 class="text-base font-bold text-white flex items-center gap-1.5">
+                    📖 Spaced Repetition Mastery Ledger
+                </h3>
+                <p class="text-xs text-slate-400 mt-0.5">Dynamic calendar schedule monitoring memory intervals day-by-day</p>
+            </div>
+            
+            <div class="bg-slate-950 px-3.5 py-1.5 rounded-lg border border-slate-800 text-[11px] font-mono text-slate-400 flex items-center gap-1.5 select-none">
+                <span class="h-1.5 w-1.5 bg-emerald-500 rounded-full"></span>
+                ACTIVE LOGS MONITOR
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs font-sans min-w-[750px]">
+                <thead>
+                    <tr class="border-b border-slate-800 text-slate-400 font-mono text-[10.5px]">
+                        <th class="py-3 px-4 uppercase font-bold">Subtopic Code</th>
+                        <th class="py-3 px-4 uppercase font-bold">Module Title</th>
+                        <th class="py-3 px-4 uppercase font-bold">Last Score</th>
+                        <th class="py-3 px-4 uppercase font-bold">Interval Window (Days)</th>
+                        <th class="py-3 px-4 uppercase font-bold">Next Review Due Date</th>
+                        <th class="py-3 px-4 uppercase font-bold">State Status</th>
+                    </tr>
+                </thead>
+                <tbody id="ledgerTableBody" class="text-slate-300 divide-y divide-slate-850">
+                    <!-- Injected dynamically through script query logs -->
+                    <tr>
+                        <td colspan="6" class="py-8 text-center font-mono text-slate-500">No mastery records committed. Complete assessments above...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- SUCCESS TOAST DIALOG MODAL -->
+    <div id="toastNotification" class="fixed bottom-6 right-6 transform translate-y-12 opacity-0 pointer-events-none bg-slate-900 border border-emerald-800 rounded-xl p-4 shadow-2xl z-50 flex items-center gap-3.5 max-w-sm transition-all duration-300 ease-out">
+        <div class="h-9 w-9 bg-emerald-950 border border-emerald-500 rounded-lg text-emerald-400 flex items-center justify-center shrink-0">
+            ✔
+        </div>
+        <div>
+            <h4 class="text-xs font-bold text-emerald-400 font-mono">Mastery Interval Updated!</h4>
+            <p id="toastMessage" class="text-[11px] text-slate-300 mt-0.5">Successfully upserted ledger records back to Supabase.</p>
+        </div>
+    </div>
+
+    <!-- GLOBAL SITE STATUS FOOTER -->
+    <footer class="w-full max-w-6xl mx-auto pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-2 font-sans select-none">
+        <span class="flex items-center gap-1.5">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+            IB Physics Space Repetition Platform
+        </span>
+        <span class="font-mono tracking-widest bg-slate-950 px-2.5 py-0.5 rounded border border-slate-850">
+            SECURE_CALIBRATION_COGNITIVE
+        </span>
+    </footer>
+
+    <!-- LOGICAL OPERATION SCRIPTS -->
+    <script>
+        // Supabase configuration details matching our platform variables
+        const SUPABASE_APP_URL = 'https://ais-dev-tegftixlotxxpl2365dugh-419168623977.asia-southeast1.run.app';
+        const SUPABASE_PUBLIC_KEY = 'PROJECT_PUBLIC_ANON_KEY';
+        let supabaseClientReference = null;
+
+        // Try initializing Supabase safely without throwing browser fatal alerts
+        try {
+            if (SUPABASE_APP_URL && !SUPABASE_APP_URL.includes('YOUR_')) {
+                supabaseClientReference = supabase.createClient(SUPABASE_APP_URL, SUPABASE_PUBLIC_KEY);
+                console.log("[Supabase] Client initialized successfully.");
+                updateDbIndicator(true);
+            }
+        } catch (err) {
+            console.warn("[Supabase] Optional initialization failed. Defaulting to fully functional localStorage mapping sandbox.", err);
+            updateDbIndicator(false);
+        }
+
+        // Active state parameters configuration
+        const sessionId = localStorage.getItem('profile_session_id') || Math.floor(10000 + Math.random() * 90000).toString();
+        localStorage.setItem('profile_session_id', sessionId);
+        document.getElementById('sessionBadge').innerText = '#' + sessionId;
+
+        let selectedLevel = localStorage.getItem('profile_level_student_1') || 'HL';
+        document.getElementById('trackBadge').innerText = selectedLevel === 'HL' ? 'HL FIELD FOCUS' : 'SL CORE FOCUS';
+
+        // Pre-configure dropdown to match syllabus level comfort
+        if (selectedLevel === 'SL') {
+            document.getElementById('subtopicSelect').value = 'TOPIC_6_1';
+        }
+
+        // Local high-fidelity physics fallback database to guarantee flawless behavior
+        const localPhysicsQuestions = {
+            "TOPIC_10_2": {
+                subtopic_code: "TOPIC_10_2",
+                subtopic_title: "Orbital Motion",
+                question_text: "A satellite is placed into circular orbit around Earth (mass M = 6.0 × 10^24 kg) at a distance of 1.6 × 10^7 meters from the planet center. Derive satellite orbital speed v as a function of orbital radius r, then algebraically prove Kepler's Third Law (T² ∝ r³) using Newton's gravitational laws.",
+                hints: {
+                    scaffolding_tip: "Start by equating the centripetal force directly to the gravitational attraction. Acceleration points radially inward, with speed related to the period T via orbital boundary circumstances.",
+                    exponent_breakdown: "1. m v² / r = G M m / r²  ⇒  v = √(G M / r)\n2. For a complete circular orbit, v = 2πr / T.\n3. (2πr / T)² = G M / r  ⇒  4π² r² / T² = G M / r\n4. Cross multiply powers: T² = (4π² / G M) · r³ ⇒ T² ∝ r³"
+                },
+                markscheme_criteria: [
+                    { id: "groundwork", title: "Equate Forces", description: "Equate centripetal force requirements directly to universal gravitational pull to derive v = √(GM/r)" },
+                    { id: "manipulation", title: "Circular Period Bounds", description: "Substitute circular speed definitions (v = 2πr / T) into the isolated speed orbital terms" },
+                    { id: "precision", title: "Exponent Cancellation", description: "Square parameters and cross-multiply powers to isolate Kepler proportions explicitly: T² = (4π²/GM) r³" }
+                ]
+            },
+            "TOPIC_10_1": {
+                subtopic_code: "TOPIC_10_1",
+                subtopic_title: "Gravitational Potential Boundaries",
+                question_text: "Derive the exact formula for escape velocity escaping the surface of a spherical planet of mass M and radius R from first principles, integrating work done against varying gravitational attraction from R all the way to infinity.",
+                hints: {
+                    scaffolding_tip: "Integrate work: W = ∫ [R to ∞] (GMm/r²) dr. Change kinetic states to match. Escape is defined where net energy at infinity sits at least at zero.",
+                    exponent_breakdown: "1. Work = ∫ [R to ∞] [G M m / r²] dr = G M m [-1 / r] evaluated from R to ∞\n2. Work = G M m / R\n3. Match escaping kinetic energy: ½ m v_esc² = G M m / R\n4. Cancel mass coefficient: v_esc = √(2 G M / R)"
+                },
+                markscheme_criteria: [
+                    { id: "groundwork", title: "Work Integration Definiton", description: "Formulate escaping mechanical work as definite integral of relative force coordinates" },
+                    { id: "manipulation", title: "Solve Integral", description: "Integrate inverse distance powers to resolve potential energy change: Work = GMm/R" },
+                    { id: "precision", title: "Escape Equation Isolation", description: "Equate to Kinetic Energy, cancel test mass, isolate exact radical: v_esc = √(2GM/R)" }
+                ]
+            },
+            "TOPIC_6_2": {
+                subtopic_code: "TOPIC_6_2",
+                subtopic_title: "Newton's Law of Gravitation",
+                question_text: "Newton's Law of Gravitation relates planetary bodies attraction forces. Derive a clear expression establishing how local gravitational acceleration strength g_local decays as function of altitude h above spherical planet mass M and core radius R, showing its sea-level reduction.",
+                hints: {
+                    scaffolding_tip: "Place test mass m at altitude h. Separation is r = R + h. Equate gravitational force attraction to local gravity mass weight.",
+                    exponent_breakdown: "1. Force of gravity: F_g = G M m / (R + h)²\n2. Newton second weight: F_g = m · g_local\n3. m · g_local = G M m / (R + h)² ⇒ g_local = G M / (R + h)²\n4. Surface limits (altitude h = 0): g_surface = G M / R²"
+                },
+                markscheme_criteria: [
+                    { id: "groundwork", title: "Scale Mass Equalities", description: "Apply general gravity equation with total center boundaries: r = R + h" },
+                    { id: "manipulation", title: "Cancel Test Coefficient", description: "Equate general pull directly to static weight F = m·g; simplify m terms" },
+                    { id: "precision", title: "Surface Boundary Limits", description: "Evaluate boundary limits where h = 0, reducing g to standard sea-level ratio: GM/R²" }
+                ]
+            },
+            "TOPIC_6_1": {
+                subtopic_code: "TOPIC_6_1",
+                subtopic_title: "Circular Centripetal Dynamics",
+                question_text: "A vehicle of mass m travels around a banked curve of radius r on frictionless road inclined at ramp incline angle θ. Derive a rigorous expression isolating safe curve speed v at which the vehicle can navigate curves without slipping up/down, showing balanced mechanics vectors.",
+                hints: {
+                    scaffolding_tip: "Verify force vectors carefully. Since there is zero vertical movement, normal force vertical projections must perfect match weight elements.",
+                    exponent_breakdown: "1. Vertical static equilibrium balances: F_N cosθ = m · g\n2. Horizontal centripetal acceleration vector: F_N sinθ = m · v² / r\n3. Divides equations: tanθ = v² / (r · g)\n4. Redact mass, isolate radical: v = √(r · g · tanθ)"
+                },
+                markscheme_criteria: [
+                    { id: "groundwork", title: "Vertical Balance", description: "Draw free-body diagrams, formulating static vertical equation: F_N cosθ = mg" },
+                    { id: "manipulation", title: "Horizontal Centripetal", description: "Equate horizontal components directly to centripetal inertia formulas: F_N sinθ = mv²/r" },
+                    { id: "precision", title: "Divide & Root Isolate", description: "Divide equations, cancel mass constraints, isolate velocity parameters: v = √(rg tanθ)" }
+                ]
+            }
+        };
+
+        // UI Indicators helpers
+        function updateDbIndicator(active) {
+            const dot = document.getElementById('dbStatusDot');
+            const text = document.getElementById('dbStatusText');
+            if (active) {
+                dot.className = "h-2 w-2 rounded-full bg-emerald-500 animate-pulse";
+                text.innerText = "Supabase Active";
+                text.className = "text-emerald-400 font-mono text-[10.5px]";
+            } else {
+                dot.className = "h-2 w-2 rounded-full bg-slate-600";
+                text.innerText = "Mock Database Ready";
+                text.className = "text-slate-450 font-mono text-[10.5px]";
+            }
+        }
+
+        // Active question state parameters
+        let activeQuestionData = null;
+
+        // Toggle Expandable Accordion Drawer
+        let hintsExpanded = false;
+        function toggleHintsAccordion() {
+            hintsExpanded = !hintsExpanded;
+            const drawer = document.getElementById('hintsDrawer');
+            const arrow = document.getElementById('accordionArrow');
+            if (hintsExpanded) {
+                drawer.classList.remove('hidden');
+                arrow.style.transform = "rotate(180deg)";
+                arrow.className = "text-amber-400 font-mono text-sm transform transition-transform duration-300";
+            } else {
+                drawer.classList.add('hidden');
+                arrow.style.transform = "rotate(0deg)";
+                arrow.className = "text-slate-400 font-mono text-sm transform transition-transform duration-300";
+            }
+        }
+
+        // PART A: Dynamic Content Fetch & Page Initialization
+        async function loadActiveQuestion() {
+            const subCode = document.getElementById('subtopicSelect').value;
+            console.log("[Curriculum climbler] Selected subtopic code:", subCode);
+
+            // Set active loading text
+            document.getElementById('questionText').innerText = "Querying live core questions matrices from Supabase Database...";
+            
+            let loadedQuestion = null;
+
+            // Step 1: Try async remote fetch from Supabase
+            if (supabaseClientReference) {
+                try {
+                    const { data, error } = await supabaseClientReference
+                        .from('question_bank')
+                        .select('*')
+                        .eq('subtopic_code', subCode)
+                        .eq('tier', 3)
+                        .maybeSingle();
+
+                    if (!error && data) {
+                        console.log("[Supabase] Successfully matched question package:", data);
+                        // Parsing hints strings / JSON arrays
+                        let rawHints = data.hints;
+                        if (typeof rawHints === 'string') {
+                            try { rawHints = JSON.parse(rawHints); } catch(e) {}
+                        }
+                        
+                        loadedQuestion = {
+                            subtopic_code: data.subtopic_code,
+                            subtopic_title: "Academic Focus Match",
+                            question_text: data.question_text || "Derive relevant gravitational formulas.",
+                            hints: {
+                                scaffolding_tip: rawHints?.scaffolding_tip || rawHints?.tip || "Analyze force components.",
+                                exponent_breakdown: rawHints?.exponent_breakdown || rawHints?.math || "Break down the algebra."
+                            },
+                            // Re-map string criteria array into objects
+                            markscheme_criteria: (data.markscheme_criteria || []).map((desc, i) => {
+                                const labels = ["Groundwork Allocation", "Manipulation Process", "Precision Calculation"];
+                                return {
+                                    id: "crit_" + i,
+                                    title: labels[i] || "Mark Criteria",
+                                    description: desc
+                                };
+                            })
+                        };
+                    }
+                } catch (fetchErr) {
+                    console.warn("[Supabase] Query fetch deferred. Harnessing local physics formulas.", fetchErr);
+                }
+            }
+
+            // Step 2: Fall back to local high-fidelity list if null
+            if (!loadedQuestion) {
+                loadedQuestion = localPhysicsQuestions[subCode];
+            }
+
+            activeQuestionData = loadedQuestion;
+
+            // Inject text fields into UI
+            document.getElementById('questionTitle').innerText = loadedQuestion.subtopic_title || "Gravitation Physics Calculus Focus";
+            document.getElementById('questionText').innerText = loadedQuestion.question_text;
+            document.getElementById('hintTip').innerText = loadedQuestion.hints.scaffolding_tip;
+            document.getElementById('hintMath').innerText = loadedQuestion.hints.exponent_breakdown;
+
+            // Render criteria checkbox array inside workspace rubric
+            const criteriaWrapper = document.getElementById('criteriaChecklist');
+            criteriaWrapper.innerHTML = '';
+
+            loadedQuestion.markscheme_criteria.forEach((crit, index) => {
+                const markLabels = ["1m Groundwork", "1m Manipulate", "1m Precision"];
+                const htmlRow = `
+                    <label class="flex items-start gap-3 p-3 bg-slate-950/65 border border-slate-850 hover:bg-slate-950 rounded-xl cursor-pointer group transition-all">
+                        <input type="checkbox" onchange="calculateRubricResponseScore()" class="rubric-check h-5 w-5 rounded border-slate-800 text-indigo-600 bg-slate-900 focus:ring-indigo-500/50 mt-0.5" data-id="${crit.id}" />
+                        <div class="space-y-0.5">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[10px] font-mono bg-indigo-950 text-indigo-400 border border-indigo-900 px-1.5 py-0.5 rounded">${markLabels[index] || "1 Mark"}</span>
+                                <span class="text-xs font-bold text-slate-200 group-hover:text-white transition-colors">${crit.title}</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 group-hover:text-slate-350 transition-colors leading-relaxed font-sans mt-1">
+                                ${crit.description}
+                            </p>
+                        </div>
+                    </label>
+                `;
+                criteriaWrapper.innerHTML += htmlRow;
+            });
+
+            // Re-evaluate band score immediately (starts at 0 checkmarks)
+            calculateRubricResponseScore();
+        }
+
+        // PART B: The Real-Time Handshake Loop (MQTT broker + optional Supabase Channel)
+        function establishRealTimeDataHandshake() {
+            const sid = sessionId;
+            console.log("[Handshake] Instantiating pipeline tunnels on Session ID:", sid);
+
+            // 1. MQTT websocket connection to the public HiveMQ Broker for zero-setup instant communication
+            try {
+                const brokerUrl = 'wss://broker.hivemq.com:8884/mqtt';
+                const mqttClient = mqtt.connect(brokerUrl, {
+                    keepalive: 60,
+                    reconnectPeriod: 2000,
+                    connectTimeout: 5000,
+                    clean: true,
+                    clientId: 'wsp_desktop_' + Math.random().toString(16).substr(2, 6)
+                });
+
+                mqttClient.on('connect', () => {
+                    console.log("[MQTT WebSockets] Connected to HiveMQ Broker.");
+                    const dot = document.getElementById('mqttStatusDot');
+                    dot.className = "h-2 w-2 rounded-full bg-emerald-500 animate-pulse";
+                    document.getElementById('mqttStatusText').innerText = "Broker online";
+                    document.getElementById('mqttStatusText').className = "text-emerald-400 font-mono text-[10.5px]";
+
+                    // Subscribe to the shared tracking room topic unique to this student's pairing code
+                    mqttClient.subscribe(`ib_physics/session/${sid}`);
+                    console.log(`[MQTT WebSockets] Subscribed successfully to ib_physics/session/${sid}`);
+                });
+
+                mqttClient.on('message', (topic, message) => {
+                    console.log("[MQTT] Raw mobile broadcast message received:", message.toString());
+                    try {
+                        const parsed = JSON.parse(message.toString());
+                        
+                        // Check for picture snapshot
+                        if (parsed.type === 'proof_snapshot' && parsed.image) {
+                            handlePhotoSnapshotUploadEvent(parsed.image);
+                        } else if (parsed.paired || parsed.handshake) {
+                            // If it's a mobile pairing link ping
+                            console.log("[MQTT] Mobile pairing ping acknowledged.");
+                        }
+                    } catch (e) {
+                        console.warn("[MQTT] Parse error on payload stream:", e);
+                    }
+                });
+
+                mqttClient.on('offline', () => {
+                    const dot = document.getElementById('mqttStatusDot');
+                    dot.className = "h-2 w-2 rounded-full bg-slate-600";
+                    document.getElementById('mqttStatusText').innerText = "Broker Lost (Retry...)";
+                    document.getElementById('mqttStatusText').className = "text-slate-400 font-mono text-[10.5px]";
+                });
+
+            } catch (err) {
+                console.error("[MQTT Connection Failure]", err);
+            }
+
+            // 2. Setup standard Supabase Realtime channel if active configuration properties exist
+            if (supabaseClientReference) {
+                try {
+                    const channel = supabaseClientReference.channel('session_' + sid);
+                    channel.subscribe((status) => {
+                        if (status === 'SUBSCRIBED') {
+                            console.log("[Supabase Realtime] Listening on real-time channel session_" + sid);
+                        }
+                    });
+
+                    channel.on('broadcast', { event: 'SUBMISSION_BROADCAST' }, (payload) => {
+                        console.log("[Supabase Realtime] Submission broadcast captured!", payload);
+                        if (payload && payload.payload) {
+                            const inner = payload.payload;
+                            if (inner.image) {
+                                handlePhotoSnapshotUploadEvent(inner.image);
+                            }
+                        }
+                    });
+                } catch (sErr) {
+                    console.warn("[Supabase Realtime] Setup error bypassed:", sErr);
+                }
+            }
+
+            // 3. Render Desktop pairing QR Code inside Standby Overlay using CDN
+            try {
+                const targetUrl = window.location.origin + '/mobile.html?session=' + sid;
+                console.log("[QR Setup] Generating QR Code targeting Mobile route:", targetUrl);
+                
+                const qrcContainer = document.getElementById('desktopQrContainer');
+                qrcContainer.innerHTML = '';
+                
+                new QRCode(qrcContainer, {
+                    text: targetUrl,
+                    width: 128,
+                    height: 128,
+                    colorDark: "#020617",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            } catch (qrErr) {
+                console.warn("[QRCode] Draw deferred, utilizing textual fallback:", qrErr);
+                document.getElementById('desktopQrContainer').innerHTML = `<span class="text-xs font-mono font-bold text-slate-500">Session #${sid}</span>`;
+            }
+        }
+
+        // Activates photo viewport, unblurs layout controls
+        function handlePhotoSnapshotUploadEvent(base64Image) {
+            console.log("[Handshake Engine] Ingesting camera base64 string payload...");
+            
+            const proofView = document.getElementById('syncedProofImage');
+            
+            // Format base64 properly if raw
+            if (base64Image && !base64Image.startsWith('data:image')) {
+                proofView.src = 'data:image/jpeg;base64,' + base64Image;
+            } else {
+                proofView.src = base64Image;
+            }
+
+            // Peel away stand-by lock
+            const standby = document.getElementById('standbyOverlay');
+            standby.classList.add('hidden');
+            
+            // Remove any blur styling filter on evaluation panel
+            const panel = document.getElementById('rightPanelCard');
+            panel.classList.remove('blur-xs', 'backdrop-blur-sm');
+        }
+
+        // Force standby view again
+        function lockPanelBackToStandby() {
+            document.getElementById('standbyOverlay').classList.remove('hidden');
+            document.getElementById('syncedProofImage').src = "";
+            
+            // Reset all checkmarks to zero on relock
+            const checks = document.querySelectorAll('.rubric-check');
+            checks.forEach(c => c.checked = false);
+            calculateRubricResponseScore();
+        }
+
+        // PART C: Self-Grading Checkbox Evaluation & Metric Mapping
+        function calculateRubricResponseScore() {
+            const checks = document.querySelectorAll('.rubric-check');
+            let checkedCount = 0;
+            checks.forEach(c => {
+                if (c.checked) checkedCount++;
+            });
+
+            console.log("[Rubric Assessment] Checklist items checked:", checkedCount);
+
+            const alertBox = document.getElementById('estimatedBandAlert');
+            const alertText = document.getElementById('estimatedBandText');
+            const alertBadge = document.getElementById('bandNumBadge');
+            const submitBtn = document.getElementById('submitLedgerBtn');
+
+            if (checkedCount === 3) {
+                // All 3 Boxes Checked: Band 7 emerald theme + activate submit
+                alertText.innerText = "ESTIMATED LEVEL: BAND 7 (Mastery Verified)";
+                alertText.className = "text-sm font-black text-emerald-400 mt-0.5 tracking-tight font-sans";
+                alertBox.className = "bg-emerald-950/40 border-2 border-emerald-800/80 p-4 rounded-xl flex items-center justify-between text-slate-300 transition-all duration-300 shadow-md shadow-emerald-500/10";
+                alertBadge.innerText = "7";
+                alertBadge.className = "h-10 w-10 text-xl font-bold font-mono rounded-lg bg-emerald-950 border border-emerald-700 text-emerald-400 flex items-center justify-center shadow-inner scale-105 transition-transform duration-300";
+
+                submitBtn.disabled = false;
+                submitBtn.className = "w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-lg shadow-emerald-500/20 border-0";
+                submitBtn.innerText = "Submit Diagnostic Metrics (Sync Ledger)";
+            } 
+            else if (checkedCount === 1 || checkedCount === 2) {
+                // 1 or 2 Boxes Checked: Band 4/5 amber theme
+                const level = checkedCount === 1 ? "BAND 4 (Concept Gaps)" : "BAND 5 (Satisfactory Progress)";
+                alertText.innerText = `ESTIMATED LEVEL: ${level}`;
+                alertText.className = "text-sm font-black text-amber-400 mt-0.5 tracking-tight font-sans";
+                alertBox.className = "bg-amber-950/45 border-2 border-amber-800/80 p-4 rounded-xl flex items-center justify-between text-slate-300 transition-all duration-300 shadow-sm";
+                alertBadge.innerText = checkedCount === 1 ? "4" : "5";
+                alertBadge.className = "h-10 w-10 text-xl font-bold font-mono rounded-lg bg-amber-950 border border-amber-700 text-amber-400 flex items-center justify-center shadow-inner scale-100 transition-all";
+
+                submitBtn.disabled = false;
+                submitBtn.className = "w-full py-4 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold rounded-xl text-xs uppercase tracking-wider transition-all duration-300 cursor-pointer shadow-lg shadow-amber-500/10 border-0";
+                submitBtn.innerText = "Submit Diagnostic Metrics (Sync Ledger)";
+            } 
+            else {
+                // 0 Checked: Band 2 flat fallback theme
+                alertText.innerText = "ESTIMATED LEVEL: BAND 2 (Urgent Review Required)";
+                alertText.className = "text-sm font-bold text-slate-400 mt-0.5 tracking-tight font-sans";
+                alertBox.className = "bg-slate-950/60 border border-slate-850 p-4 rounded-xl flex items-center justify-between text-slate-300 transition-all duration-300";
+                alertBadge.innerText = "2";
+                alertBadge.className = "h-10 w-10 text-xl font-bold font-mono rounded-lg bg-slate-900 border border-slate-800 text-slate-500 flex items-center justify-center shadow-inner scale-95 transition-all";
+
+                // Allow 0 metrics submission too, but it will carry low score properties
+                submitBtn.disabled = false;
+                submitBtn.className = "w-full py-4 bg-slate-800 border-slate-700 hover:bg-slate-750 hover:border-slate-600 text-slate-300 font-bold rounded-xl text-xs uppercase tracking-wider transition-all duration-300 cursor-pointer";
+                submitBtn.innerText = "Submit Concept Errors (Log Progress)";
+            }
+        }
+
+        // PART D: Spaced Repetition Core Algorithm & Ledger Upsert
+        async function executeSpacedRepetitionTransaction() {
+            const checks = document.querySelectorAll('.rubric-check');
+            let score = 0;
+            checks.forEach(c => { if (c.checked) score++; });
+
+            const subCode = document.getElementById('subtopicSelect').value;
+            const now = new Date();
+
+            console.log(`[SRS Transaction] Initiating interval update: Score ${score} on Subtopic ${subCode}`);
+
+            // Step 1: Look up existing history in matching ledger array
+            let previousInterval = 0;
+            const localRecordsKey = "ib_physics_srs_records";
+            let srsTasks = [];
+
+            try {
+                const raw = localStorage.getItem(localRecordsKey);
+                if (raw) srsTasks = JSON.parse(raw);
+            } catch (e) {
+                console.warn("[SRS] Error reading localStorage ledger databases:", e);
+            }
+
+            // Locate previous task inside storage array
+            const recordIndex = srsTasks.findIndex(task => task.subtopicId === subCode && task.userId === "student_1");
+            if (recordIndex !== -1) {
+                previousInterval = srsTasks[recordIndex].currentInterval || 0;
+            }
+
+            // Step 2: Compute the Spaced Repetition Next Review window interval size
+            let nextInterval = 1;
+            let isConceptLeak = false;
+
+            if (score === 3) {
+                // Band 7 Mastery exponential projection
+                if (previousInterval === 0) {
+                    nextInterval = 1; // initial day-1 validation check
+                } else if (previousInterval === 1) {
+                    nextInterval = 3; // step out to day-3 validation
+                } else {
+                    nextInterval = Math.round(previousInterval * 2.5); // exponential interval leap
+                }
+                isConceptLeak = false;
+            } 
+            else if (score === 2) {
+                // Slower satisfactory validation
+                nextInterval = previousInterval === 0 ? 1 : Math.round(previousInterval * 1.5);
+                isConceptLeak = false;
+            } 
+            else {
+                // Zero or 1 checkbox checked -> severe concept decay reset parameter
+                nextInterval = 1; // reassignment tomorrow
+                isConceptLeak = true;
+            }
+
+            const nextReviewDate = new Date();
+            nextReviewDate.setDate(nextReviewDate.getDate() + nextInterval);
+
+            // Step 3: Handle database .upsert() write
+            let dbSuccess = false;
+            if (supabaseClientReference) {
+                try {
+                    let userObj = null;
+                    const { data: { user } } = await supabaseClientReference.auth.getUser();
+                    if (user) {
+                        userObj = user;
+                    } else {
+                        const { data: anonData, error: anonError } = await supabaseClientReference.auth.signInAnonymously();
+                        if (!anonError && anonData && anonData.user) {
+                            userObj = anonData.user;
+                        }
+                    }
+
+                    if (userObj) {
+                        // Ensure profile exists
+                        await supabaseClientReference
+                            .from('profiles')
+                            .upsert({ id: userObj.id }, { onConflict: 'id' });
+
+                        // Fetch or insert the subtopic to translate code to ID
+                        let subtopicId = null;
+                        const { data: subtopicCheck } = await supabaseClientReference
+                            .from('subtopics')
+                            .select('id')
+                            .eq('code', subCode)
+                            .maybeSingle();
+
+                        if (subtopicCheck) {
+                            subtopicId = subtopicCheck.id;
+                        } else {
+                            const subtopicMapping = {
+                                "TOPIC_6_1": { title: "Circular Motion Dynamics", level: "SL" },
+                                "TOPIC_6_2": { title: "Newton's Law of Gravitation", level: "SL" },
+                                "TOPIC_10_1": { title: "Gravitational Potential Boundaries", level: "HL" },
+                                "TOPIC_10_2": { title: "Orbital Mechanics", level: "HL" },
+                                "TOPIC_10_3": { title: "Equipotential Fields", level: "HL" },
+                                "TOPIC_10_4": { title: "Potential Gradient", level: "HL" }
+                            };
+                            const info = subtopicMapping[subCode] || { title: "Gravity Derivations Module", level: "HL" };
+                            const { data: insertData, error: insertError } = await supabaseClientReference
+                                .from('subtopics')
+                                .insert({
+                                    code: subCode,
+                                    title: info.title,
+                                    syllabus_level: info.level
+                                })
+                                .select('id')
+                                .single();
+                            
+                            if (!insertError && insertData) {
+                                subtopicId = insertData.id;
+                            }
+                        }
+
+                        if (subtopicId) {
+                            const dbPayload = {
+                                user_id: userObj.id,
+                                subtopic_id: subtopicId,
+                                confidence_level: score === 3 ? 2 : score === 2 ? 1 : 0,
+                                rubric_score_achieved: score,
+                                current_interval_days: nextInterval,
+                                last_reviewed_at: now.toISOString(),
+                                next_review_due: nextReviewDate.toISOString()
+                            };
+
+                            const { data, error } = await supabaseClientReference
+                                .from('student_mastery_ledger')
+                                .upsert(dbPayload, { onConflict: 'user_id,subtopic_id' })
+                                .select();
+
+                            if (!error) {
+                                console.log("[Supabase] Successfully upserted remote ledger row:", data);
+                                dbSuccess = true;
+                                updateDbIndicator(true);
+                            } else {
+                                throw error;
+                            }
+                        }
+                    }
+                } catch (dbErr) {
+                    console.warn("[Supabase] Upsert record failed. Syncing locally with index fallback.", dbErr);
+                }
+            }
+
+            // Step 4: Sync seamlessly back to local storage task arrays
+            let matchedTopicName = "Topic 10: Gravitational Fields";
+            let matchedTitleStr = "Derive gravitation calculus criteria and Kepler parameters";
+            
+            if (activeQuestionData) {
+                matchedTopicName = activeQuestionData.subtopic_title || matchedTopicName;
+                matchedTitleStr = activeQuestionData.question_text.substring(0, 75) + "...";
+            }
+
+            const localMappedTask = {
+                id: recordIndex !== -1 ? srsTasks[recordIndex].id : `task_dyn_${Math.random().toString(16).substring(2, 6)}`,
+                userId: "student_1",
+                subtopicId: subCode,
+                title: matchedTitleStr,
+                topicName: matchedTopicName,
+                rubricScore: score,
+                previousInterval: previousInterval,
+                currentInterval: nextInterval,
+                nextReviewDue: nextReviewDate.toISOString(),
+                isConceptLeak: isConceptLeak,
+                lastTested: now.toISOString()
+            };
+
+            if (recordIndex !== -1) {
+                srsTasks[recordIndex] = localMappedTask;
+            } else {
+                srsTasks.push(localMappedTask);
+            }
+
+            localStorage.setItem(localRecordsKey, JSON.stringify(srsTasks));
+            window.dispatchEvent(new Event("srs-db-updated"));
+
+            // Trigger success dialog toast in viewport
+            showFeedbackToast(nextInterval, dbSuccess);
+
+            // Reload table view logs
+            loadHistoricalMasteryLedgerTable();
+
+            // Lock panel back to standby to await next calculations problem handshakes
+            setTimeout(() => {
+                lockPanelBackToStandby();
+            }, 3000);
+        }
+
+        // Show visual confirmation animation toast
+        function showFeedbackToast(intervalDays, dbOnline) {
+            const toast = document.getElementById('toastNotification');
+            const msg = document.getElementById('toastMessage');
+
+            msg.innerText = `Recalculated Next Review interval: ${intervalDays} Day(s). Logged ${dbOnline ? "remotely on Supabase" : "locally inside secure storage"}!`;
+            
+            // Pop inside screen viewport
+            toast.className = "fixed bottom-6 right-6 transform translate-y-0 opacity-100 pointer-events-auto bg-slate-900 border border-emerald-500 rounded-xl p-4 shadow-2xl z-50 flex items-center gap-3.5 max-w-sm transition-all duration-300 ease-out";
+
+            setTimeout(() => {
+                toast.className = "fixed bottom-6 right-6 transform translate-y-12 opacity-0 pointer-events-none bg-slate-900 border border-emerald-800 rounded-xl p-4 shadow-2xl z-50 flex items-center gap-3.5 max-w-sm transition-all duration-300 ease-out";
+            }, 4500);
+        }
+
+        // Load Space Repetition logs and render dynamic data rows
+        async function loadHistoricalMasteryLedgerTable() {
+            const tableBody = document.getElementById('ledgerTableBody');
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="py-5 text-center font-mono text-slate-500 animate-pulse text-[11px]">Syncing ledger databases...</td>
+                </tr>
+            `;
+
+            let displayRows = [];
+
+            // 1. Fetch live student ledger log records from Supabase
+            if (supabaseClientReference) {
+                try {
+                    let userObj = null;
+                    const { data: { user } } = await supabaseClientReference.auth.getUser();
+                    if (user) {
+                        userObj = user;
+                    }
+
+                    if (userObj) {
+                        const { data, error } = await supabaseClientReference
+                            .from('student_mastery_ledger')
+                            .select('*, subtopics(code, title)')
+                            .eq('user_id', userObj.id);
+
+                        if (!error && data && data.length > 0) {
+                            console.log("[Table Engine] Retrieved remote rows count:", data.length);
+                            displayRows = data.map(row => {
+                                let mappedCode = row.subtopics?.code || "TOPIC_UNKNOWN";
+                                let mappedTitle = row.subtopics?.title || "Custom Fields Evaluation Practice";
+
+                                return {
+                                    subtopic_code: mappedCode,
+                                    title: mappedTitle,
+                                    score: row.rubric_score_achieved,
+                                    interval: row.current_interval_days,
+                                    next_due: row.next_review_due,
+                                    status: row.confidence_level === 0 ? 'CONCEPT LEAK' : 'SECURE'
+                                };
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.warn("[Table Engine] Supabase ledger lookup deferred. Formatting local entries.", e);
+                }
+            }
+
+            // 2. Fallback / Merge with localStorage arrays to have a full responsive sync history representation
+            if (displayRows.length === 0) {
+                try {
+                    const raw = localStorage.getItem("ib_physics_srs_records");
+                    if (raw) {
+                        const parsedTasks = JSON.parse(raw);
+                        displayRows = parsedTasks.map(task => {
+                            let formattedTitle = task.title;
+                            if (formattedTitle.length > 50) formattedTitle = formattedTitle.substring(0, 48) + "...";
+                            
+                            return {
+                                subtopic_code: task.subtopicId,
+                                title: formattedTitle,
+                                score: task.rubricScore,
+                                interval: task.currentInterval,
+                                next_due: task.nextReviewDue,
+                                status: task.isConceptLeak ? 'CONCEPT LEAK' : 'SECURE'
+                            };
+                        });
+                    }
+                } catch (localErr) {
+                    console.error("[Table Engine] Failed parsing mock fallback ledger:", localErr);
+                }
+            }
+
+            // Sort displaying records alphabetically or by review due date
+            if (displayRows.length > 0) {
+                tableBody.innerHTML = '';
+                displayRows.forEach(rec => {
+                    const nextDateStr = new Date(rec.next_due).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    // Define badge colors for states
+                    let statusBadgeHtml = '';
+                    if (rec.status === 'CONCEPT LEAK' || rec.score <= 1) {
+                        statusBadgeHtml = `<span class="bg-red-950/60 border border-red-900/60 text-red-400 px-2.5 py-0.5 rounded-full font-bold text-[9.5px]">CONCEPT DECAY</span>`;
+                    } else {
+                        statusBadgeHtml = `<span class="bg-emerald-950/60 border border-emerald-900/60 text-emerald-400 px-2.5 py-0.5 rounded-full font-bold text-[9.5px]">SECURE</span>`;
+                    }
+
+                    // Score rating tags
+                    const ratingStarHtml = `<span class="font-bold text-amber-400 font-mono">${'★'.repeat(rec.score)}${'☆'.repeat(3 - rec.score)}</span>`;
+
+                    const rowHtml = `
+                        <tr class="hover:bg-slate-900/45 transition-colors">
+                            <td class="py-3.5 px-4 font-mono font-bold text-blue-400 text-[11px]">${rec.subtopic_code}</td>
+                            <td class="py-3.5 px-4 font-medium text-slate-100">${rec.title}</td>
+                            <td class="py-3.5 px-4">${ratingStarHtml} <span class="text-[10px] text-slate-500 font-mono">(${rec.score}/3)</span></td>
+                            <td class="py-3.5 px-4 font-mono text-indigo-400 font-medium text-[11.5px]">${rec.interval} Day(s)</td>
+                            <td class="py-3.5 px-4 font-mono text-slate-400 text-[11px]">${nextDateStr}</td>
+                            <td class="py-3.5 px-4">${statusBadgeHtml}</td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += rowHtml;
+                });
+            } else {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-8 text-center font-mono text-slate-500 text-[11px]">No active Space Repetition Mastery entries found. Submit assessments above to begin logs track.</td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Dry Simulation Handler : Bypasses real smartphone connectivity to fast-verify panel layouts
+        function simulatePhotoPayloadDirect() {
+            console.log("[Dry Simulator] Packaging hand-drawn physics worksheet calculations as mock payload...");
+            
+            // Build a gorgeous high-fidelity vector canvas representing standard handwritten physics derivations of Kepler space geometry
+            const simCanvas = document.createElement('canvas');
+            simCanvas.width = 400;
+            simCanvas.height = 300;
+            const ctx = simCanvas.getContext('2d');
+
+            // Draw clean mathematical ledger sheet background
+            ctx.fillStyle = "#fafaf9"; // stone white paper base
+            ctx.fillRect(0, 0, 400, 300);
+
+            // Draw coordinate grid system
+            ctx.strokeStyle = "rgba(14, 165, 233, 0.12)"; // light sky blue grids lines
+            ctx.lineWidth = 1;
+            for (let x = 0; x < 400; x += 20) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, 300);
+                ctx.stroke();
+            }
+            for (let y = 0; y < 300; y += 20) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(400, y);
+                ctx.stroke();
+            }
+
+            // Draw margin line
+            ctx.strokeStyle = "rgba(239, 68, 68, 0.3)"; // red margin line
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(45, 0);
+            ctx.lineTo(45, 300);
+            ctx.stroke();
+
+            // Draw mock hand-drawn orbits sketch & Free Body Vectors
+            ctx.strokeStyle = "#1e3a8a"; // deep blue fountain ink pen
+            ctx.lineWidth = 2;
+            
+            // Draw Planet earth central circle
+            ctx.beginPath();
+            ctx.arc(100, 150, 25, 0, 2 * Math.PI);
+            ctx.stroke();
+            ctx.fillStyle = "#eff6ff";
+            ctx.fill();
+            
+            // Draw planet text
+            ctx.fillStyle = "#1e3a8a";
+            ctx.font = "italic bold 10px Courier New, monospace";
+            ctx.fillText("M (Earth)", 82, 153);
+
+            // Draw orbiting satellite vector trajectory
+            ctx.strokeStyle = "#475569";
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.arc(100, 150, 75, 0, 2 * Math.PI);
+            ctx.stroke();
+            ctx.setLineDash([]); // clear dash
+
+            // Draw orbiting satellite body
+            ctx.strokeStyle = "#1e3a8a";
+            ctx.fillStyle = "#1e40af";
+            ctx.beginPath();
+            ctx.arc(175, 150, 7, 0, 2 * Math.PI);
+            ctx.stroke();
+            ctx.fill();
+
+            // Draw centripetal pulling vector arrow
+            ctx.strokeStyle = "#dc2626"; // red vector force arrow
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(168, 150);
+            ctx.lineTo(112, 150); // pointing inward
+            ctx.stroke();
+            // Arrowhead
+            ctx.beginPath();
+            ctx.moveTo(112, 150);
+            ctx.lineTo(118, 145);
+            ctx.lineTo(118, 155);
+            ctx.fillStyle = "#dc2626";
+            ctx.fill();
+
+            ctx.fillStyle = "#dc2626";
+            ctx.font = "bold 9px Courier New, monospace";
+            ctx.fillText("F_g = F_c = mv²/r", 124, 142);
+
+            // Write handwritten mathematical equations derivations
+            ctx.fillStyle = "#0f172a"; // dark lead gray pen ink
+            ctx.font = "italic bold 13px Courier New, monospace";
+            
+            ctx.fillText("Derivate Kepler Third Orbit Limit:", 60, 40);
+            ctx.font = "italic bold 12px Courier New, monospace";
+            ctx.fillText("1) F_g = G*M*m / r^2           [Groundwork Check]", 60, 75);
+            ctx.fillText("2) m*a_c = m*v^2 / r           [Force Ratio Balance]", 60, 100);
+            ctx.fillText("   -> m*v^2/r = G*M*m/r²", 60, 120);
+            ctx.fillText("   -> v = sqrt(G*M/r)        [Cancel m satellite]", 60, 140);
+            ctx.fillText("3) Substitute v = 2*pi*r / T   [Circular bounds]", 60, 200);
+            ctx.fillText("   -> (2*pi*r/T)² = G*M / r", 60, 225);
+            ctx.fillText("   -> 4*pi²*r²/T² = G*M / r", 60, 245);
+            ctx.fillText("   -> T² = (4*pi²/G*M) * r³  [Kepler's 3rd Law!!!]", 60, 275);
+
+            // Draw a student score grade stamp
+            ctx.strokeStyle = "rgba(16, 185, 129, 0.5)"; // green stamp
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(340, 240, 30, 0, 2 * Math.PI);
+            ctx.stroke();
+            ctx.fillStyle = "rgba(16, 185, 129, 0.8)";
+            ctx.font = "bold 11px Arial, sans-serif";
+            ctx.fillText("IB PASS", 318, 238);
+            ctx.fillText("A+ GRADE", 314, 252);
+
+            // Convert to base64 image data-url structure
+            const simulatedUrl = simCanvas.toDataURL('image/png');
+
+            // Send payload to handhsake executor directly to unblur panel
+            handlePhotoSnapshotUploadEvent(simulatedUrl);
+        }
+
+        // On Page Load Orchestration Initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            // Initiate core communication modules
+            establishRealTimeDataHandshake();
+
+            // Load first question variables
+            loadActiveQuestion();
+
+            // Render historic review logs table data
+            loadHistoricalMasteryLedgerTable();
+        });
+    </script>
+</body>
+</html>

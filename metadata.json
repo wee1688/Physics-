@@ -1,0 +1,6 @@
+{
+  "name": "IB Physics Gravitation Mastery",
+  "description": "Interactive scaffolding application for IB Physics students to master Topic 6 & 10 (Gravitation) satellite orbital speed derivation, taking them from Band 2 to Band 7 precision.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

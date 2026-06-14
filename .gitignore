@@ -1,0 +1,14 @@
+# Build Artifacts
+dist/
+build/
+node_modules/
+
+# Env Variables
+.env
+.env.local
+
+# IDE/Tools
+.DS_Store
+*.log
+.vscode/
+.idea/
